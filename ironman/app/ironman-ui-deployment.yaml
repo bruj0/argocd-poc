@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rollouts-demo-ui
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: rollouts-demo-ui
+  template:
+    metadata:
+      labels:
+        app: rollouts-demo-ui
+    spec:
+      containers:
+      - image: rollouts-demo:green
+        name: rollouts-demo-ui
+        ports:
+        - containerPort: 8080
+        

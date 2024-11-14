@@ -1,0 +1,62 @@
+DNA:
+  infra:
+    argoCD:
+      user: argocd-dna
+  applications:
+    app-ironman:
+      name: ironman
+      project: dna-project
+      destination:
+        - cluster: engineering-dev
+          url: https://1.2.3.4
+          valueFiles: values-dev.yaml
+        - cluster: engineering-qa
+          url: https://1.2.3.4
+          valuesFiles: values-qa.yaml
+      source:
+        repoURL: https://github.com/bruj0/argocd-poc.git
+        path: ironman/app
+    app-hulk:
+      name: hulk
+      project: dna-project
+      destination:
+        - cluster: engineering-dev
+          url: https://1.2.3.4
+          valueFiles: values-dev.yaml
+        - cluster: engineering-qa
+          url: https://1.2.3.4
+          valuesFiles: values-qa.yaml
+      source:
+        repoURL: https://github.com/bruj0/argocd-poc.git
+        path: hulk
+FCC:
+  infra:
+    argoCD:
+      user: argocd-fcc
+  applications:
+    app-ironman:
+      name: ironman
+      project: fcc-project
+      destination:
+        - cluster: engineering-dev
+          url: https://1.2.3.4
+          valueFiles: values-dev.yaml
+        - cluster: engineering-qa
+          url: https://1.2.3.4
+          valuesFiles: values-qa.yaml
+      source:
+        repoURL: https://github.com/bruj0/argocd-poc.git
+        path: ironman/app
+    app-hulk:
+      name: hulk
+      project: fcc-project
+      destination:
+        - cluster: engineering-dev
+          url: https://1.2.3.4
+          valueFiles: values-dev.yaml
+        - cluster: engineering-qa
+          url: https://1.2.3.4
+          valuesFiles: values-qa.yaml
+      source:
+        repoURL: https://github.com/bruj0/argocd-poc.git
+        path: hulk
