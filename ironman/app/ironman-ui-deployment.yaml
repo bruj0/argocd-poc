@@ -1,21 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rollouts-demo-ui
+  name: ironman-ui
 spec:
   replicas: 1
   revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: rollouts-demo-ui
+      app: ironman-ui
   template:
     metadata:
       labels:
-        app: rollouts-demo-ui
+        app: ironman-ui
     spec:
       containers:
       - image: rollouts-demo:green
-        name: rollouts-demo-ui
+        name: ironman-ui
         ports:
         - containerPort: 8080
-        
