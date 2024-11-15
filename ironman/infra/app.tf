@@ -11,7 +11,7 @@ resource "argocd_application" "ironman" {
   wait    = true
 
   spec {
-    project = "ironman-project"
+    project = argocd_project.ironman.id
 
     destination {
       server    = "https://kubernetes.default.svc"
@@ -63,4 +63,5 @@ resource "argocd_application" "ironman" {
       ]
     }
   }
+  depends_on = [ argocd_project.ironman ]
 }
