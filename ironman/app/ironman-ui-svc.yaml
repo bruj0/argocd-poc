@@ -3,8 +3,10 @@ kind: Service
 metadata:
   name: ironman-ui
 spec:
+  type: NodePort
   ports:
   - port: 8080
     targetPort: 8080
+    nodePort: 8090
   selector:
     app: ironman-ui
