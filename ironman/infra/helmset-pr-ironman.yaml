@@ -15,21 +15,21 @@ spec:
         repo: argocd-poc
         # Labels is used to filter the PRs that you want to target. (optional)
         labels:
-        - feature
-        filters:
-              - branchMatch: ".*-argocd"
+          - feature
+      filters:
+        - branchMatch: ".*-argocd"
       requeueAfterSeconds: 90
   template:
     metadata:
-      name: 'ironman-pr-{{.branch}}-{{.number}}'
+      name: 'ironman-pr-{{.branch_slug}}-{{.number}}'
     spec:
       destination: 
-        namespace: 'ironman-pr-{{branch_slug}}-{{number}}'
+        namespace: 'ironman-pr-{{.branch_slug}}-{{.number}}'
         server: "https://kubernetes.default.svc"
       project: ironman-project
       source: 
         repoURL: "https://github.com/bruj0/argocd-poc.git"
-        targetRevision: '{{head_sha}}'
+        targetRevision: '{{.head_sha}}'
         path: ironman/helm
         helm:
           parameters:
@@ -37,5 +37,6 @@ spec:
             #TODO: change to head_sha when its built by CI
               value: green
       syncPolicy:
+        automated: {}
         syncOptions:
           - CreateNamespace=true
