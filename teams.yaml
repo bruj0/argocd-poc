@@ -1,7 +1,12 @@
 DNA:
   infra:
     argoCD:
-      user: argocd-dna
+      role: argocd-dna
+      users:
+        - alice
+        - bob
+    database:
+      type: postgresql
   applications:
     app-ironman:
       name: ironman
@@ -10,9 +15,11 @@ DNA:
         - cluster: engineering-dev
           url: https://1.2.3.4
           valueFiles: values-dev.yaml
+          release: 2.0.0-dev
         - cluster: engineering-qa
           url: https://1.2.3.4
           valuesFiles: values-qa.yaml
+          release: 1.0.0-prod
       source:
         repoURL: https://github.com/bruj0/argocd-poc.git
         path: ironman/app
@@ -32,7 +39,7 @@ DNA:
 FCC:
   infra:
     argoCD:
-      user: argocd-fcc
+      role: argocd-fcc
   applications:
     app-ironman:
       name: ironman
