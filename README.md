@@ -1,1 +1,1 @@
-# A complete CICD implementation using ArgoCD
+# A  CICD implementation using ArgoCD
