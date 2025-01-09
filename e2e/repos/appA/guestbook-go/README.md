@@ -26,23 +26,29 @@ This example assumes that you have a working environment after running:
 **Tip:** View all the `kubectl` commands, including their options and descriptions in the [kubectl CLI reference](https://kubernetes.io/docs/user-guide/kubectl-overview/).
 
 ### Step One: Create the docker images
-* cd AppA; 
-* make build; make load
-* cd appB
-* k -n guestbook apply -f redis-master-deployment.yaml
-* k -n guestbook apply -f redis-master-service.yaml
-* cd appC/redis-slave
-* make build; make load
-* 
+```bash
+cd AppA
+make build
+make load
 
-### Step Two: 
+cd appC/redis-slave
+make build
+make load
+```
+### Step Two: First commit to repos
+```bash
+for dir in appA appB appC helm-charts; do
+    cd $dir
+    git add .
+    git commit -am "First import"
+    git push origin main
+    cd ..
+done
+```
 
+### Step One: Create the Redis master pod
 
-
-### Step One: Create the Redis master pod<a id="step-one"></a>
-
-Use the `examples/guestbook-go/redis-master-controller.yaml` file to create a [replication controller](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/) and Redis master [pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). The pod runs a Redis key-value server in a container. Using a replication controller is the preferred way to launch long-running pods, even for 1 replica, so that the pod benefits from the self-healing mechanism in Kubernetes (keeps the pods alive).
-
+Install the first
 1. Use the [redis-master-controller.yaml](redis-master-controller.yaml) file to create the Redis master replication controller in your Kubernetes cluster by running the `kubectl create -f` *`filename`* command:
 
     ```console

@@ -19,7 +19,7 @@ fi
 # https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
 # See: https://github.com/containerd/containerd/blob/main/docs/hosts.md
 
-# change this to patch the config instead of create a new cluster
+# TODO: Add this to the kind config file
 # cat <<EOF | kind create cluster --config=-
 # kind: Cluster
 # apiVersion: kind.x-k8s.io/v1alpha4

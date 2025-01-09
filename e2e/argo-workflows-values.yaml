@@ -1,0 +1,9 @@
+server:
+  authModes: ["client"]
+  ingress:
+    enabled: "true"
+    hosts:
+      - workflows.10.0.2.15.nip.io
+    paths:
+      - /
+    pathType: Prefix

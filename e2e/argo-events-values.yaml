@@ -1,0 +1,5 @@
+createAggregateRoles: true
+controller:
+  rbac:
+    namespaced: false
+    
