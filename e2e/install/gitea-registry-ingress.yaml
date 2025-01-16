@@ -1,0 +1,29 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: gitea-registry-ingress
+  namespace: gitea
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  tls:
+  - hosts:
+    - gitea-registry.10.0.2.15.nip.io
+    secretName: gitea-https-tls
+  rules:
+  - host: gitea-registry.10.0.2.15.nip.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: gitea-http
+            port:
+              number: 3000
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer:
+    ingress:
+    - hostname: localhost

@@ -1,0 +1,122 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: build-and-push-docker-image-
+spec:
+  arguments:
+    parameters:
+      - name: version
+        value: "1.0.0"
+      - name: commit
+        value: "99999999999"
+      - name: repo
+        value: http://gitea-http.gitea.svc.cluster.local:3000/gitea_admin/appA.git
+      - name: branch
+        value: main
+      - name: path
+        value: "guestbook-go"
+  entrypoint: build-and-push
+  # We use a volume claim template so that we can have a shared workspace.
+  volumeClaimTemplates:
+    - metadata:
+        name: work
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 64Mi
+  volumes:
+    - name: certs
+      configMap:
+        name: nip-io-ca
+
+  templates:
+    - name: build-and-push
+      dag:
+        tasks:
+          - name: clone
+            template: clone
+            arguments:
+              parameters:
+                - name: repo
+                  value: "{{workflow.parameters.repo}}"
+                - name: branch
+                  value: "{{workflow.parameters.branch}}"
+          - name: build-image
+            template: build-image
+            arguments:
+              parameters:
+                - name: path
+                  value: "{{workflow.parameters.path}}"
+                - name: image
+                  value: "gitea-http.gitea.svc.cluster.local:3000/gitea_admin/appa/{{workflow.parameters.path}}:{{workflow.parameters.version}}-{{workflow.parameters.commit}}"
+            depends: "clone"
+    - name: clone
+      inputs:
+        parameters:
+          - name: repo
+          - name: branch
+      container:
+        volumeMounts:
+          - mountPath: /work
+            name: work
+        image: alpine/git:v2.26.2
+        workingDir: /work
+        # Do a shallow clone, which is the fastest way to clone, by using the
+        # --depth, --branch, and --single-branch options
+        args:
+          - clone
+          - --depth
+          - "1"
+          - --branch
+          - "{{inputs.parameters.branch}}"
+          - --single-branch
+          - "{{inputs.parameters.repo}}"
+          - .
+    - name: build-image
+      inputs:
+        parameters:
+          - name: path
+          - name: image
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: docker-config
+        - name: buildkit
+          configMap:
+            name: buildkit
+      container:
+        readinessProbe:
+          exec:
+            command: [ sh, -c, "buildctl debug workers" ]
+        image: moby/buildkit:v0.18.2-rootless
+        volumeMounts:
+          - name: work
+            mountPath: /work
+          - name: docker-config
+            mountPath: /.docker
+          - name: certs
+            readOnly: true
+            mountPath: /certs
+          - mountPath: /etc/buildkit/
+            name: buildkit
+        workingDir: /work/{{inputs.parameters.path}}
+        env:
+          - name: BUILDKITD_FLAGS
+            value: --oci-worker-no-process-sandbox --config=/etc/buildkit/buildkitd.toml
+          - name: DOCKER_CONFIG
+            value: /.docker
+        command:
+          - buildctl-daemonless.sh
+        args:
+          - build
+          - --frontend
+          - dockerfile.v0
+          - --local
+          - context=.
+          - --local
+          - dockerfile=.
+          - --output
+          - type=image,name={{inputs.parameters.image}},push=true,registry.insecure=true
+#          - --registry-auth-tlscontext
+#          - host=https://gitea-registry.10.0.2.15.nip.io,insecure=true,ca=/certs/ca.crt
