@@ -86,7 +86,7 @@ gitea:
 extraVolumes:
 - name: host-mount
   hostPath:
-    path: /mnt
+    path: /home/gitea
 extraContainerVolumeMounts:
 - name: host-mount
   mountPath: /data/git/gitea-repositories
