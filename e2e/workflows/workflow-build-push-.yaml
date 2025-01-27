@@ -25,11 +25,6 @@ spec:
         resources:
           requests:
             storage: 64Mi
-  volumes:
-    - name: certs
-      configMap:
-        name: nip-io-ca
-
   templates:
     - name: build-and-push
       dag:
@@ -95,9 +90,6 @@ spec:
             mountPath: /work
           - name: docker-config
             mountPath: /.docker
-          - name: certs
-            readOnly: true
-            mountPath: /certs
           - mountPath: /etc/buildkit/
             name: buildkit
         workingDir: /work/{{inputs.parameters.path}}

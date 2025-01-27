@@ -22,7 +22,8 @@ spec:
               metadata:
                 generateName: build-and-push-docker-image-
               spec:
-                entrypoint: build-and-push
+                workflowTemplateRef:
+                  name: build-and-push-docker-image
                 arguments:
                   parameters:
                     - name: version
