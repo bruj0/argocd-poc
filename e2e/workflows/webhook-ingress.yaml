@@ -1,0 +1,23 @@
+# Change the webhook-eventsource to the name of the service you want to expose
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: guestbook
+  labels:
+    eventsource-name: webhook
+spec:
+  rules:
+  - host: webhook.10.0.2.15.nip.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: webhook-eventsource
+            port:
+              number: 14000
+        path: /tag-created
+        pathType: Prefix
+status:
+  loadBalancer:
+    ingress:
+    - hostname: localhost

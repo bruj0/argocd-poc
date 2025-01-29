@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -x
 # setup ArgoCD
-. ./VARS.sh
+. ./my-vars.sh
 
 echo
 ARGOCD_HOST="argocd.${INGRESS_DOMAIN}"

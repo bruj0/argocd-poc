@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    team: team1
+  name: guestbook-dev
+  namespace: argocd
+spec:
+  project: team1-project
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook
+  source:
+    repoURL: http://gitea-http.gitea.svc.cluster.local:3000/api/packages/gitea_admin/helm
+    targetRevision: 0.1.1
+    chart: guestbook
+    helm:
+      valuesObject:
+        service:
+          type: ClusterIP
+          port: 3000
+        ingress:
+          enabled: true
+          host: guestbook.10.0.2.15.nip.io
+          port: 3000
+        image:
+          repository: gitea-registry.10.0.2.15.nip.io/gitea_admin/guestbook-go
+          pullPolicy: IfNotPresent
+          tag: "v1.0.13-79a7e95a22d48e68526c4865ef0fb7b1a88df7ba"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

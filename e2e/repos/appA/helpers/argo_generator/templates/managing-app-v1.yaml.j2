@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: 
+  name: TEAM1-Mgmt-App
+  namespace: argocd
+spec:
+  destination:
+    namespace: TEAM1
+    server: "https://kubernetes.default.svc"
+  project: TEAM1-project
+  source: 
+    repoURL: "https://bitbucket.swift.com/PLATFORM/argocd-managing-apps.git"
+    path: /devs/argocd/TEAM1
+    directory:
+      recurse: true

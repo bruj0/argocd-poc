@@ -1,0 +1,7 @@
+service:
+  type: ClusterIP
+  port: 3000
+ingress:
+  enabled: true
+  host: guestbook-dev.10.0.2.15.nip.io
+  port: 3000

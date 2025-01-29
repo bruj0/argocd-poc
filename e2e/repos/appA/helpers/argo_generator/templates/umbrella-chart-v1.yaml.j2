@@ -1,0 +1,17 @@
+apiVersion: v2
+name: Umbrella-APP-chart
+version: 1.0.3
+appVersion: 2.0.5
+description: Installs APP1,APP2,APP3
+type: application
+
+dependencies:
+  - name: -{{ config.app1 }}
+    version: {{ config.app1.version }}
+    repository: -{{ config.app1.repository }}
+  - name: -{{ config.app2 }}
+    version: {{ config.app2.version }}
+    repository: -{{ config.app2.repository }}
+  - name: {{ config.app3 }}
+    version: {{ config.app3.version }}
+    repository: {{ config.app3.repository }}

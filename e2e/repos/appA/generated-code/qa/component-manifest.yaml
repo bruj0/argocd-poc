@@ -1,0 +1,36 @@
+release_manifest:
+  environment: dev
+#Helm chart for the component
+   helm-chart:
+    repoURL: http://gitea-http.gitea.svc.cluster.local:3000/api/packages/gitea_admin/helm
+    targetRevision: 0.1.1
+    chart: guestbook
+    type: helm
+
+#Immutable package with values because it is immutable
+   helm-values:
+    repoURL: http://gitea-http.gitea.svc.cluster.local:3000/api/packages/gitea_admin/helm
+    targetRevision: 0.1.1
+    chart: guestbook-values
+    helm:
+      valueFiles:
+        - /values/environment/common/defaults.yaml
+        - /values/environment/{{environment}}/defaults.yaml
+        - /values/custom/{{environment}}/live.yaml
+#In-line values git repo /values/dev/values.yaml
+#Use the file at the current commit hash
+  inline-values:
+    - valuesObject:
+        service:
+          type: ClusterIP
+          port: 3000
+        ingress:
+          enabled: true
+          host: guestbook.10.0.2.15.nip.io
+          port: 3000
+
+  docker-images:
+    - name: gitea.10.0.2.15.nip.io:3100/gitea_admin/guestbook-go
+      full_version: v1.0.13-79a7e95a22d48e68526c4865ef0fb7b1a88df7ba
+        sha256: sha256:ad92270daf0501645231acc6e1ca3caf6a4dda9c5d7e300a3d6571196de11277
+        type: docker

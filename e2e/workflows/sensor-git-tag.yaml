@@ -3,6 +3,12 @@ kind: Sensor
 metadata:
   name: tag-created-sensor
 spec:
+  template:
+    serviceAccountName: operate-workflow-sa
+    container:
+      env:
+        - name: LOG_LEVEL
+          value: debug
   dependencies:
     - name: tag-created
       eventSourceName: webhook
@@ -27,9 +33,15 @@ spec:
                 arguments:
                   parameters:
                     - name: version
-                      value: "{{(events.webhook.tag-created.body.ref).split('/').last}}"
+                      value: "v0.0.0"
                     - name: commit
-                      value: "{{(events.webhook.tag-created.body.after)}}"
-  template:
-    serviceAccountName: argo-events-sa
-
+                      value: "xxxxxxx"
+          parameters:
+            - src:
+                dependencyName: tag-created
+                dataKey: body.ref
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: tag-created
+                dataKey: body.sha
+              dest: spec.arguments.parameters.1.value

@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -x
 # setup ArgoCD
-. ./VARS.sh
+. ./my-vars.sh
 
 echo
 cat <<EOF | helm upgrade --install gitea gitea-charts/gitea --wait --create-namespace --namespace=gitea --values=-
+deployment:
+  env:
+    - name: GITEA__webhook__ALLOWED_HOST_LIST
+      value: "*"
 ingress:
   enabled: true
   hosts:
@@ -25,7 +29,7 @@ gitea:
 extraVolumes:
 - name: host-mount
   hostPath:
-    path: /home/gitea
+    path: /mnt
 extraContainerVolumeMounts:
 - name: host-mount
   mountPath: /data/git/gitea-repositories

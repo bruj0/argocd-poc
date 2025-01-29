@@ -1,0 +1,125 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: build-and-push-docker-image
+  generateName: build-and-push-docker-image-
+  annotations:
+    workflows.argoproj.io/description: |
+      This workflow builds a Docker image from a Git repository and pushes it to a registry.
+      * Uses no authentication for the git repository, it must be public.
+      * Uses a predefined buildkit configuration from the configmap buildkit to disable TLS for the registry
+      * Uses a predefined docker-config secret to authenticate to the OCI repository.
+      * Uses the path as the name of the Docker image and the version:commit as tag
+spec:
+  arguments:
+    parameters:
+      - name: version
+        value: "1.0.0"
+      - name: commit
+        value: "99999999999"
+      - name: repo
+        value: http://gitea-http.gitea.svc.cluster.local:3000/gitea_admin/appA.git
+      - name: branch
+        value: main
+      - name: path
+        value: "guestbook-go"
+  entrypoint: build-and-push
+  # We use a volume claim template so that we can have a shared workspace.
+  volumeClaimTemplates:
+    - metadata:
+        name: work
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 64Mi
+  templates:
+    - name: build-and-push
+      dag:
+        tasks:
+          - name: clone
+            template: clone
+            arguments:
+              parameters:
+                - name: repo
+                  value: "{{workflow.parameters.repo}}"
+                - name: branch
+                  value: "{{workflow.parameters.branch}}"
+          - name: build-image
+            template: build-image
+            arguments:
+              parameters:
+                - name: path
+                  value: "{{workflow.parameters.path}}"
+                - name: image
+                  value: "gitea-http.gitea.svc.cluster.local:3000/gitea_admin/{{workflow.parameters.path}}:{{workflow.parameters.version}}-{{workflow.parameters.commit}}"
+            dependencies: 
+              - clone
+          # - name: test
+          #   template: test
+          #   dependencies:
+          #     - build-image
+    - name: clone
+      inputs:
+        parameters:
+          - name: repo
+          - name: branch
+      container:
+        volumeMounts:
+          - mountPath: /work
+            name: work
+        image: alpine/git:v2.26.2
+        workingDir: /work
+        # Do a shallow clone, which is the fastest way to clone, by using the
+        # --depth, --branch, and --single-branch options
+        args:
+          - clone
+          - --depth
+          - "1"
+          - --branch
+          - "{{inputs.parameters.branch}}"
+          - --single-branch
+          - "{{inputs.parameters.repo}}"
+          - .
+    - name: build-image
+      inputs:
+        parameters:
+          - name: path
+          - name: image
+      volumes:
+        - name: docker-config
+          secret:
+            secretName: docker-config
+        - name: buildkit
+          configMap:
+            name: buildkit
+      container:
+        readinessProbe:
+          exec:
+            command: [ sh, -c, "buildctl debug workers" ]
+        image: moby/buildkit:v0.18.2-rootless
+        volumeMounts:
+          - name: work
+            mountPath: /work
+          - name: docker-config
+            mountPath: /.docker
+          - mountPath: /etc/buildkit/
+            name: buildkit
+        workingDir: /work/{{inputs.parameters.path}}
+        env:
+          - name: BUILDKITD_FLAGS
+            value: --oci-worker-no-process-sandbox --config=/etc/buildkit/buildkitd.toml
+          - name: DOCKER_CONFIG
+            value: /.docker
+        command:
+          - buildctl-daemonless.sh
+        args:
+          - build
+          - --frontend
+          - dockerfile.v0
+          - --local
+          - context=.
+          - --local
+          - dockerfile=.
+          - --output
+          - type=image,name={{inputs.parameters.image}},push=true,registry.insecure=true

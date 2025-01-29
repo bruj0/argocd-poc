@@ -1,0 +1,107 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: build-and-push-docker-image-
+spec:
+  arguments:
+    parameters:
+      - name: version
+        value: "1.0.0"
+      - name: commit
+        value: "99999999999"
+      - name: repo
+        value: http://gitea-http.gitea.svc.cluster.local:3000/gitea_admin/appA.git
+      - name: branch
+        value: main
+      - name: path
+        value: "guestbook-go"
+  entrypoint: build-and-push
+  # We use a volume claim template so that we can have a shared workspace.
+  volumeClaimTemplates:
+    - metadata:
+        name: work
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 64Mi
+  templates:
+    - name: clone-generate-manifest
+      dag:
+        tasks:
+          - name: clone
+            template: clone
+            arguments:
+              parameters:
+                - name: repo
+                  value: "{{workflow.parameters.repo}}"
+                - name: branch
+                  value: "{{workflow.parameters.branch}}"
+          - name: generate
+            template: generate-manifest
+            arguments:
+              parameters:
+                - name: name
+                  value: "{{workflow.parameters.path}}"
+                - name: tag
+                  value: "{{workflow.parameters.version}}-{{workflow.parameters.commit}}"
+            depends: "clone"
+    - name: clone
+      inputs:
+        parameters:
+          - name: repo
+          - name: branch
+      container:
+        volumeMounts:
+          - mountPath: /work
+            name: work
+        image: alpine/git:v2.26.2
+        workingDir: /work
+        # Do a shallow clone, which is the fastest way to clone, by using the
+        # --depth, --branch, and --single-branch options
+        args:
+          - clone
+          - --depth
+          - "1"
+          - --branch
+          - "{{inputs.parameters.branch}}"
+          - --single-branch
+          - "{{inputs.parameters.repo}}"
+          - .
+    - name: generate-manifest
+      inputs:
+        parameters:
+          - name: name
+          - name: tag
+     container:
+        readinessProbe:
+          exec:
+            command: [ sh, -c, "buildctl debug workers" ]
+        image: moby/buildkit:v0.18.2-rootless
+        volumeMounts:
+          - name: work
+            mountPath: /work
+          - name: docker-config
+            mountPath: /.docker
+          - mountPath: /etc/buildkit/
+            name: buildkit
+        workingDir: /work/{{inputs.parameters.path}}
+        env:
+          - name: BUILDKITD_FLAGS
+            value: --oci-worker-no-process-sandbox --config=/etc/buildkit/buildkitd.toml
+          - name: DOCKER_CONFIG
+            value: /.docker
+        command:
+          - buildctl-daemonless.sh
+        args:
+          - build
+          - --frontend
+          - dockerfile.v0
+          - --local
+          - context=.
+          - --local
+          - dockerfile=.
+          - --output
+          - type=image,name={{inputs.parameters.image}},push=true,registry.insecure=true
+#          - --registry-auth-tlscontext
+#          - host=https://gitea-registry.10.0.2.15.nip.io,insecure=true,ca=/certs/ca.crt
