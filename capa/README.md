@@ -50,7 +50,7 @@ kind: Rollout
 ```
 
 New `spec.template` part of the manifest controlls the deployment of the `ReplicaSet` that used to be managed by the Deployment object.
-```
+```yaml
 spec:
   replicas: 5
   strategy:
